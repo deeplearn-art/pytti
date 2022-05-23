@@ -124,6 +124,7 @@ def _sanitize_for_config(in_str):
         in_str = in_str.replace(char, "_")
     return in_str
 
+import clip
 SUPPORTED_CLIP_MODELS = {
     _sanitize_for_config(model_name): model_name
     for model_name in clip.available_models()
