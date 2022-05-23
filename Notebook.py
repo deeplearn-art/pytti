@@ -117,32 +117,68 @@ def save_batch(settings_list, path):
       write_settings(Bunch(settings_dict), f)
       f.write('\n\n')
 
+def _sanitize_for_config(in_str):
+    for char in ("/", "-"):
+        in_str = in_str.replace(char, "")
+    for char in "@":
+        in_str = in_str.replace(char, "_")
+    return in_str
+
+SUPPORTED_CLIP_MODELS = {
+    _sanitize_for_config(model_name): model_name
+    for model_name in clip.available_models()
+}
+
+print(SUPPORTED_CLIP_MODELS)
 
 CLIP_MODEL_NAMES = None
+
 def load_clip(params):
-  from pytti import Perceptor
-  global CLIP_MODEL_NAMES
-  if CLIP_MODEL_NAMES is not None:
-    last_names = CLIP_MODEL_NAMES
-  else:
-    last_names = []
-  CLIP_MODEL_NAMES = []
-  if params.RN50x4:
-    CLIP_MODEL_NAMES.append("RN50x4")
-  if params.RN50:
-    CLIP_MODEL_NAMES.append("RN50")
-  if params.ViTB32:
-    CLIP_MODEL_NAMES.append("ViT-B/32")
-  if params.ViTB16:
-    CLIP_MODEL_NAMES.append("ViT-B/16")
-  if last_names != CLIP_MODEL_NAMES or Perceptor.CLIP_PERCEPTORS is None:
-    if CLIP_MODEL_NAMES == []:
-      Perceptor.free_clip()
-      raise RuntimeError("Please select at least one CLIP model")
-    Perceptor.free_clip()
-    print("Loading CLIP...")
-    Perceptor.init_clip(CLIP_MODEL_NAMES)
-    print("CLIP loaded.")
+    # refactor to specify this stuff in a config file
+    global CLIP_MODEL_NAMES
+    if CLIP_MODEL_NAMES is not None:
+        last_names = CLIP_MODEL_NAMES
+    else:
+        last_names = []
+    CLIP_MODEL_NAMES = []
+    # this "last_names" thing is way over complicated,
+    # and also a notebook-specific... pattern. deprecate this later as part of
+    # cleaning up globals.
+
+    for config_name, clip_name in SUPPORTED_CLIP_MODELS.items():
+        if params.get(config_name):
+            CLIP_MODEL_NAMES.append(clip_name)
+
+    if not params.get("use_mmc"):
+        if last_names != CLIP_MODEL_NAMES or Perceptor.CLIP_PERCEPTORS is None:
+            if CLIP_MODEL_NAMES == []:
+                Perceptor.free_clip()
+                raise RuntimeError("Please select at least one CLIP model")
+            Perceptor.free_clip()
+            print("Loading CLIP...")
+            Perceptor.init_clip(CLIP_MODEL_NAMES)
+            print("CLIP loaded.")
+    else:
+        print("attempting to use mmc to load perceptors")
+        import mmc
+        from mmc.registry import REGISTRY
+        import mmc.loaders  # force trigger model registrations
+        from mmc.mock.openai import MockOpenaiClip
+
+        CLIP_PERCEPTORS = (
+            []
+        )  # this will be fine because we'll use it to overwrite the module object
+        for item in params.mmc_models:
+            print(item)
+            model_loaders = REGISTRY.find(**item)
+            print(model_loaders)
+            for model_loader in model_loaders:
+                print(model_loader)
+                model = model_loader.load()
+                model = MockOpenaiClip(model)
+                CLIP_PERCEPTORS.append(model)
+        print(CLIP_PERCEPTORS)
+        Perceptor.CLIP_PERCEPTORS = CLIP_PERCEPTORS  # weird that htis works, but fine. 
 
 def get_frames(path):
   """reads the frames of the mp4 file `path` and returns them as a list of PIL images"""
