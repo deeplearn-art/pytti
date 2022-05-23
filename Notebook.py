@@ -2,6 +2,12 @@
 #This file defines utility functions for use with notebooks.
 
 #https://stackoverflow.com/questions/15411967/how-can-i-check-if-code-is-executed-in-the-ipython-notebook
+
+import clip
+from pytti import Perceptor
+
+from pytti.Perceptor import CLIP_PERCEPTORS
+
 def is_notebook():
   try:
     shell = get_ipython().__class__.__name__
@@ -124,7 +130,6 @@ def _sanitize_for_config(in_str):
         in_str = in_str.replace(char, "_")
     return in_str
 
-import clip
 SUPPORTED_CLIP_MODELS = {
     _sanitize_for_config(model_name): model_name
     for model_name in clip.available_models()
