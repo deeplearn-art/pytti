@@ -41,7 +41,7 @@ class Loss(nn.Module):
 
 from pytti.LossAug.TVLoss import TVLoss
 from pytti.LossAug.MSELoss import MSELoss
-from pytti.LossAug.OpticalFlowLoss import OpticalFlowLoss, TargetFlowLoss
+#from pytti.LossAug.OpticalFlowLoss import OpticalFlowLoss, TargetFlowLoss
 from pytti.LossAug.DepthLoss import DepthLoss
 from pytti.LossAug.EdgeLoss import EdgeLoss
 from pytti.LossAug.LatentLoss import LatentLoss
