@@ -17,7 +17,8 @@ from torchvision.transforms import functional as TF
 
 os.chdir('GMA')
 try:
-  sys.path.append('core')
+  #sys.path.append('core')
+  sys.path.append('/content/drive/MyDrive/pytti_test/GMA/core')
   from network import RAFTGMA
   from utils import flow_viz
   from utils.utils import InputPadder
